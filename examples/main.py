@@ -1,104 +1,63 @@
-import pandas as pd
+import sys
 from pathlib import Path
-from scipy.interpolate import interp1d
+
+# Add the src directory to Python path
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+from solver import BEM
+from operation import blad_operation
+from geometry import blad_geometry
+from airfoil_data import read_polar
+from solver import plot_cp_ct
+
 import matplotlib.pyplot as plt
-data_folder = Path("./inputs/IEA-15-240-RWT/Airfoils")
+from pathlib import Path
+import numpy as np
+# Load data
+geometry = blad_geometry(Path("./inputs/IEA-15-240-RWT/IEA-15-240-RWT_AeroDyn15_blade.dat"))
+polars = read_polar(Path("./inputs/IEA-15-240-RWT/Airfoils/polar").glob("*.dat"))
+operation = blad_operation(Path("./inputs/IEA-15-240-RWT/IEA_15MW_RWT_Onshore.opt"))
 
+# Initialize BEM model
+bem = BEM(geometry, polars)
 
-class Airfoil:
-    def __init__(self, polar_files, coord_files, name=None):
-        self.name = name
-        self.polar_files = polar_files
-        self.coord_files = coord_files
-        self.polar_data = {}  # Store polar data here
+# Preallocate arrays
+P_out, T_out = [], []
+for idx, row in operation.iterrows():
+    V0 = row["V0"]
+    omega_rps = row["omega_rpm"] * 2 * np.pi / 60  # convert to rad/s
+    pitch = row["pitch_deg"]
+    T, M, P = bem.compute_performance(V0, omega_rps, pitch)
+    T_out.append(T / 1000)  # N -> kN
+    P_out.append(P / 1000)  # W -> kW
 
-    def read_all_polar(self):
-        """
-        Reads all polar files and stores in self.polar_data
-        """
-        for polar_file in self.polar_files:
-            data = []
-            try:
-                with open(polar_file, "r") as f:
-                    for i, line in enumerate(f):
-                        if i < 20:
-                            continue
-                        if line.strip().startswith("!") or not line.strip():
-                            continue
-                        try:
-                            alpha, cl, cd, cm = map(float, line.strip().split()[:4])
-                            data.append((alpha, cl, cd, cm))
-                        except ValueError:
-                            continue
-
-                df = pd.DataFrame(data, columns=["Alpha", "Cl", "Cd", "Cm"])
-                self.polar_data[polar_file.name] = df
-
-            except FileNotFoundError:
-                print(f"File not found: {polar_file}")
-
-    def interpolate_polar(self, alpha):
-        """
-        Interpolates Cl and Cd for the given alpha from all polar files.
-        Returns a dictionary: { filename: (Cl, Cd) }
-        """
-        results = {}
-        for name, df in self.polar_data.items():
-            try:
-                cl_interp = interp1d(df["Alpha"], df["Cl"], kind="linear", fill_value ="extrapolate")
-                cd_interp = interp1d(df["Alpha"], df["Cd"], kind="linear", fill_value ="extrapolate")
-                cl_val = float(cl_interp(alpha))
-                cd_val = float(cd_interp(alpha))
-                results[name] = (cl_val, cd_val)
-            except Exception as e:
-                print(f"Interpolation failed for {name}: {e}")
-                results[name] = (None, None)
-        return results
-    def read_all_coords(self):
-        """
-        Reads all coordinate files and returns a dictionary of DataFrames.
-        """
-        coords = {}
-        for coord_file in self.coord_files:
-            try:
-                df = pd.read_csv(coord_file, delim_whitespace=True, header=None, skiprows=8)
-                coords[coord_file.name] = df
-            except FileNotFoundError:
-                print(f"File not found: {coord_file}")
-        return coords
-    
-    
-# Get all files
-polar_files = list(data_folder.glob("IEA-15-240-RWT_AeroDyn15_Polar_*.dat"))
-coord_files = list(data_folder.glob("IEA-15-240-RWT_AF*_Coords*.txt"))
-
-# Safety check
-if not polar_files or not coord_files:
-    print("No files found.")
-    exit()
-
-# Create airfoil object
-airfoil = Airfoil(polar_files=polar_files, coord_files=coord_files)
-
-# Load data once
-airfoil.read_all_polar()
-airfoil.read_all_coords()
-print(airfoil.read_all_coords())
-# Interpolate Cl and Cd at a specific Alpha (e.g. 10 degrees)
-alpha_target = 10
-interpolated_values = airfoil.interpolate_polar(alpha=alpha_target)
-
-# Print results
-for fname, (cl, cd) in interpolated_values.items():
-    print(f"{fname}: Alpha={alpha_target}° → Cl={cl:.3f}, Cd={cd:.3f}")
-
-figure, ax = plt.subplots()
-for fname, df in airfoil.polar_data.items():
-    ax.plot(df["Alpha"], df["Cl"], label=f"{fname} Cl")
-    ax.plot(df["Alpha"], df["Cd"], label=f"{fname} Cd") 
-ax.axvline(x=alpha_target, color='r', linestyle='--', label=f"Alpha={alpha_target}°")
-ax.set_xlabel("Alpha (degrees)")
-ax.set_ylabel("Coefficient")
-ax.set_title("Polar Data")
-#ax.legend()
+# Plot results
+plt.figure()
+plt.plot(operation["V0"], P_out, label="Predicted Power [kW]")
+plt.plot(operation["V0"], T_out, label="Predicted Thrust [kN]")
+plt.xlabel("Wind Speed [m/s]")
+plt.ylabel("Performance")
+plt.title("BEM Power and Thrust Curves")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
 plt.show()
+
+# Plot results with reference (measured) data
+plt.figure()
+plt.plot(operation["V0"], P_out, label="Predicted Power [kW]", markersize=2)
+plt.plot(operation["V0"], T_out, label="Predicted Thrust [kN]", markersize=2)
+
+# Plot reference (measured) values
+plt.plot(operation["V0"], operation["power_kw"], 'o--', label="Measured Power [kW]", markersize=4)
+plt.plot(operation["V0"], operation["thrust_kN"], 'o--', label="Measured Thrust [kN]", markersize=4)
+
+plt.xlabel("Wind Speed [m/s]")
+plt.ylabel("Performance")
+plt.title("BEM vs Measured Power and Thrust Curves")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+plot_cp_ct(operation["V0"].values, P_out, T_out, R=240/2)
+

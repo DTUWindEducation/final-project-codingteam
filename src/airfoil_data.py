@@ -21,31 +21,59 @@ def read_coords(coord_paths):
     return coords
 
 
+import re
+
 def read_polar(polar_paths):
-    """
-    Reads all polar files and returns a dictionary:
-    {index: (alpha_array, Cl_array, Cd_array)}
-    """
     polars = {}
     for path in polar_paths:
         try:
-            df = pd.read_csv(
-                path,
-                sep=r"\s+",
-                header=None,
-                skiprows=20,
-                usecols=[0, 1, 2],
-                names=["alpha", "Cl", "Cd"]
-            )
-            # Extract airfoil index from filename
-            idx = int(path.stem.split("_")[-1])  # 'Polar_00' → 0
+            with open(path, 'r') as f:
+                lines = f.readlines()
+
+            # Step 1: Find the line with 'NumAlf' and extract number from that line
+            num_data_lines = None
+            for i, line in enumerate(lines):
+                if 'NumAlf' in line:
+                    # Extract number using regex (digits only before any comment)
+                    match = re.search(r'\d+', line)
+                    if match:
+                        num_data_lines = int(match.group())
+                        data_start = i + 2  # Skip possible header line
+                        break
+
+            if num_data_lines is None:
+                raise ValueError("Couldn't find NumAlf line in file")
+
+            # Step 2: Load data block
+            data = []
+            for line in lines[data_start:data_start + num_data_lines]:
+                if line.strip().startswith("!"):
+                    continue
+                parts = line.strip().split()
+                if len(parts) >= 3:
+                    try:
+                        alpha = float(parts[0])
+                        cl = float(parts[1])
+                        cd = float(parts[2])
+                        data.append((alpha, cl, cd))
+                    except ValueError:
+                        continue  # Skip lines with text or bad numbers
+
+            # Step 3: Store in dictionary
+            df = pd.DataFrame(data, columns=["alpha", "Cl", "Cd"])
+            idx = int(path.stem.split("_")[-1])
             polars[idx] = (df["alpha"].values, df["Cl"].values, df["Cd"].values)
+
         except Exception as e:
-            print(f" Failed to read {path.name}: {e}")
+            print(f"⚠️ Failed to read {path.name}: {e}")
     return polars
+
+
+
+
 polars_data = read_polar(polar_paths)
 alpha, Cl, Cd = polars_data[0]  # AF00
-print(Cl[:5])
+#print(Cl[:5])
 
 
 

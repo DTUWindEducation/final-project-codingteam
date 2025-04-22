@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 class BEM:
     """
     Blade Element Momentum (BEM) method for wind turbine analysis.
@@ -21,6 +22,7 @@ class BEM:
         self.B = n_blades
         self.rho = rho
 
+
     def interpolate_polar(self, airfoil_id, alpha_deg):
         alpha, cl, cd = self.polars[airfoil_id]
         cl_interp = interp1d(alpha, cl, bounds_error=False, fill_value="extrapolate")
@@ -36,11 +38,12 @@ class BEM:
         a_prime = 1 / (4 * sin_phi * cos_phi / (sigma * Ct) - 1)
         return a, a_prime
 
+
     def compute_performance(self, V0, omega, pitch_deg):
         dr = np.gradient(self.geometry["r"])
         r_vals = self.geometry["r"].values
         chord = self.geometry["chord"].values
-        twist = self.geometry["twist"].values
+        twist = self.geometry["twist_deg"].values
         af_id = self.geometry["airfoil_id"].astype(int).values
 
         a = np.zeros_like(r_vals)
@@ -52,6 +55,8 @@ class BEM:
         dM = np.zeros_like(r_vals)
 
         for i, r in enumerate(r_vals):
+            if r == 0:
+                continue 
             local_chord = chord[i]
             local_twist = np.radians(twist[i])
             airfoil = af_id[i] - 1  # convert to 0-based
@@ -67,7 +72,7 @@ class BEM:
                 cn = cl * np.cos(phi) + cd * np.sin(phi)
                 ct = cl * np.sin(phi) - cd * np.cos(phi)
 
-                a_new, a_p_new = self.compute_induction_factors(r, sigma, phi, cn, ct)
+                a_new, a_p_new = self.compute_induction_factors(sigma, phi, cn, ct)
                 if np.abs(a_new - a_i) < tol and np.abs(a_p_new - a_p_i) < tol:
                     break
                 a_i, a_p_i = a_new, a_p_new
@@ -81,7 +86,26 @@ class BEM:
         T = np.trapz(dT, r_vals)
         M = np.trapz(dM, r_vals)
         P = M * omega
-
         return T, M, P    
 
+def plot_cp_ct(V0_array, P_array, T_array, R, rho=1.225):
+    """
+    Compute and plot power and thrust coefficients.
+    """
+    A = np.pi * R**2
+    P_array = np.array(P_array) * 1000  # kW to W
+    T_array = np.array(T_array) * 1000  # kN to N
+
+    cp = P_array / (0.5 * rho * A * V0_array**3)
+    ct = T_array / (0.5 * rho * A * V0_array**2)
+    plt.figure()
+    plt.plot(V0_array, cp, label="$C_P$ (Power Coefficient)")
+    plt.plot(V0_array, ct, label="$C_T$ (Thrust Coefficient)")
+    plt.xlabel("Wind Speed [m/s]")
+    plt.ylabel("Coefficient Value")
+    plt.title("Power and Thrust Coefficients")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
