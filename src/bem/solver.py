@@ -3,7 +3,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 
-class BEM:
+class BEMSolver:
     """
     Blade Element Momentum (BEM) method for wind turbine analysis.
 
