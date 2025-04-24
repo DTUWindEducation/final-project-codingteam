@@ -95,8 +95,8 @@ class BEM:
             a_prime[i] = a_p_i
 
             # Local forces
-            dT[i] = 4 * np.pi * r * self.rho * V0**2 * a_i * (1 - a_i) * dr[i]
-            dM[i] = 4 * np.pi * r**3 * self.rho * V0 * omega * a_p_i * (1 - a_i) * dr[i]
+            dT[i] = 4 * np.pi * r * self.rho * V0**2 * a_i * (1 - a_i) #* dr[i]
+            dM[i] = 4 * np.pi * r**3 * self.rho * V0 * omega * a_p_i * (1 - a_i) #* dr[i]
         T = np.trapezoid(dT, r_vals)
         M = np.trapezoid(dM, r_vals)
 
