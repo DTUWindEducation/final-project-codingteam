@@ -3,11 +3,17 @@ from pathlib import Path
 
 # Add the src directory to Python path
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-from solver import BEM
-from operation import blad_operation
-from geometry import blad_geometry
-from airfoil_data import read_polar
-from solver import plot_cp_ct
+# from solver import BEM
+# from operation import blad_operation
+# from geometry import blad_geometry
+# from airfoil_data import read_polar
+# from solver import plot_cp_ct
+from bem.solver import BEM, plot_cp_ct
+from bem.geometry import blad_geometry
+from bem.airfoil_data import read_polar
+from bem.operation import blad_operation
+
+
 
 import matplotlib.pyplot as plt
 from pathlib import Path

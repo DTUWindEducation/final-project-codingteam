@@ -1,6 +1,7 @@
 # files to ignore in this repo
-inputs/
+inputs/ 
 outputs/
+# git add -f inputs/ 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
