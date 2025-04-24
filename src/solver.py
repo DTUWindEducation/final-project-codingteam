@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+
+
 class BEM:
     """
     Blade Element Momentum (BEM) method for wind turbine analysis.
@@ -24,13 +26,24 @@ class BEM:
 
 
     def interpolate_polar(self, airfoil_id, alpha_deg):
+        '''Interpolate the lift and drag coefficients for a given angle of attack.
+        Args:
+            airfoil_id (int): The ID of the airfoil.
+            alpha_deg (float): Angle of attack in degrees.'''
         alpha, cl, cd = self.polars[airfoil_id]
         cl_interp = interp1d(alpha, cl, bounds_error=False, fill_value="extrapolate")
         cd_interp = interp1d(alpha, cd, bounds_error=False, fill_value="extrapolate")
-        return cl_interp(alpha_deg), cd_interp(alpha_deg) 
+        # return cl_interp(alpha_deg), cd_interp(alpha_deg)
+        return cl_interp(alpha_deg).item(), cd_interp(alpha_deg).item()
+ 
     
-
     def compute_induction_factors(self, sigma, phi, Cn, Ct):
+        '''Compute the induction factors a and a' based on the BEM theory.
+        Args:
+            sigma (float): Solidity of the rotor.
+            phi (float): Angle between the wind and the rotor plane.
+            Cn (float): Normal force coefficient.
+            Ct (float): Tangential force coefficient.'''
         sin_phi = np.sin(phi)
         cos_phi = np.cos(phi)
 
@@ -40,6 +53,7 @@ class BEM:
 
 
     def compute_performance(self, V0, omega, pitch_deg):
+        '''Compute the thrust, torque, and power of the rotor. '''
         dr = np.gradient(self.geometry["r"])
         r_vals = self.geometry["r"].values
         chord = self.geometry["chord"].values
@@ -83,14 +97,15 @@ class BEM:
             # Local forces
             dT[i] = 4 * np.pi * r * self.rho * V0**2 * a_i * (1 - a_i) * dr[i]
             dM[i] = 4 * np.pi * r**3 * self.rho * V0 * omega * a_p_i * (1 - a_i) * dr[i]
-        T = np.trapz(dT, r_vals)
-        M = np.trapz(dM, r_vals)
+        T = np.trapezoid(dT, r_vals)
+        M = np.trapezoid(dM, r_vals)
+
         P = M * omega
         return T, M, P    
 
 def plot_cp_ct(V0_array, P_array, T_array, R, rho=1.225):
     """
-    Compute and plot power and thrust coefficients.
+    Compute and plot power and thrust coefficients.     
     """
     A = np.pi * R**2
     P_array = np.array(P_array) * 1000  # kW to W

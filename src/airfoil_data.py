@@ -1,7 +1,9 @@
+
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
+import re 
 
 # Define paths
 data_folder = Path("./inputs/IEA-15-240-RWT/Airfoils")
@@ -21,7 +23,7 @@ def read_coords(coord_paths):
     return coords
 
 
-import re
+
 
 def read_polar(polar_paths):
     polars = {}
