@@ -8,11 +8,11 @@ sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 # from geometry import blad_geometry
 # from airfoil_data import read_polar
 # from solver import plot_cp_ct
-from bem.solver import BEM, plot_cp_ct
+from bem.solver import BEMSolver, plot_cp_ct
 from bem.geometry import blad_geometry
 from bem.airfoil_data import read_polar
 from bem.operation import blad_operation
-
+from bem import BEMSolver, blad_geometry, read_polar
 
 
 import matplotlib.pyplot as plt
