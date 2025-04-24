@@ -1,30 +1,22 @@
-# Specify build system
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
- 
-# Define package details
+
 [project]
 name = "bem"
-description = "Blade Element Momentum (BEM) wind turbine model Python Package"
 version = "0.1.0"
-
+description = "Blade Element Momentum (BEM) wind turbine model"
 authors = [
-    { name = "Heba", email = "s184347@dtu.dk" },
-    { name = "Rehab", email = "s191263@dtu.dk" }
+    { name = "Your Name", email = "your@email.com" }
 ]
-
+readme = "README.md"
+requires-python = ">=3.7"
 dependencies = [
-    "matplotlib",
     "numpy",
     "pandas",
+    "matplotlib",
     "scipy"
-]  # Removed the extra comma here
-
-[project.urls]
-Repository = "https://github.com/DTUWindEducation/final-project-codingteam.git"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/bem"]
- 
-
