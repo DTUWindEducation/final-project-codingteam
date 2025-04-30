@@ -1,12 +1,22 @@
-import numpy as np
-import pandas as pd
+"""Functions for loading and plotting wind turbine operational data."""
 from pathlib import Path
+import pandas as pd
 import matplotlib.pyplot as plt
-operation = Path("./inputs/IEA-15-240-RWT/IEA_15MW_RWT_Onshore.opt")  # Operation = .txt
 
-def blad_operation(operation):
+
+def blad_operation(filepath):
+    """
+    Load wind turbine operation data from a whitespace-separated file.
+
+    Args:
+        filepath (str): Path to the data file.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns for wind speed, pitch, 
+                      rotational speed, power, and thrust.
+    """
     # Read the file, assuming whitespace-separated and no header
-    df = pd.read_csv(operation, sep=r'\s+', header=None, skiprows=1)
+    df = pd.read_csv(filepath, sep=r'\s+', header=None, skiprows=1)
 
     # Assign expected column names (based on your image)
     df.columns = [
@@ -19,9 +29,9 @@ def blad_operation(operation):
 
     return df
 
-oper_df = blad_operation(operation)
-#print(oper_df)
 
+# oper_df = blad_operation(filepath)
+#print(oper_df)
 
 def plot_operational_subplots(df):
     """
@@ -31,7 +41,7 @@ def plot_operational_subplots(df):
     - Thrust curve
     - Rotor speed schedule
     """
-    fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+    _, axs = plt.subplots(2, 2, figsize=(12, 8))
 
     # Power curve
     axs[0, 0].plot(df["V0"], df["power_kw"], marker='o', color='blue')
@@ -65,4 +75,9 @@ def plot_operational_subplots(df):
     plt.show()
 
 
-plot_operational_subplots(oper_df)
+#plot_operational_subplots(oper_df)
+if __name__ == "__main__":
+    data_path = Path("./inputs/IEA-15-240-RWT/IEA_15MW_RWT_Onshore.opt")
+    oper_df = blad_operation(data_path)
+    plot_operational_subplots(oper_df)
+    

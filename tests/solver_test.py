@@ -2,13 +2,13 @@ import sys
 from pathlib import Path
 
 # Add the src directory to the Python path
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src" / "bem"))
 
 import pytest
 import numpy as np
-from solver import BEM, plot_cp_ct
-from geometry import blad_geometry
-from airfoil_data import read_polar
+from bem.solver import BEMSolver, plot_cp_ct
+from bem.geometry import blad_geometry
+from bem.airfoil_data import read_polar
 
 @pytest.fixture
 def bem_fixture():
@@ -16,7 +16,7 @@ def bem_fixture():
     polar_path = Path("./inputs/IEA-15-240-RWT/Airfoils/polar").glob("*.dat")
     geometry = blad_geometry(geom_path)
     polars = read_polar(polar_path)
-    return BEM(geometry, polars)
+    return BEMSolver(geometry, polars)
 
 
 def test_interpolate_polar(bem_fixture):
@@ -30,7 +30,7 @@ def test_compute_induction_factors():
     sigma = 0.05
     phi = np.radians(30)
     Cn, Ct = 1.0, 0.8
-    bem = BEM(None, None)
+    bem = BEMSolver(None, None)
     a, a_prime = bem.compute_induction_factors(sigma, phi, Cn, Ct)
     assert 0 <= a <= 1
     assert -0.5 <= a_prime <= 1

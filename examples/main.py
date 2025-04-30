@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 # Add the src directory to Python path
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src" / "bem"))
 # from solver import BEM
 # from operation import blad_operation
 # from geometry import blad_geometry
@@ -24,7 +24,7 @@ polars = read_polar(Path("./inputs/IEA-15-240-RWT/Airfoils/polar").glob("*.dat")
 operation = blad_operation(Path("./inputs/IEA-15-240-RWT/IEA_15MW_RWT_Onshore.opt"))
 
 # Initialize BEM model
-bem = BEM(geometry, polars)
+bem = BEMSolver(geometry, polars)
 
 # Preallocate arrays
 P_out, T_out = [], []

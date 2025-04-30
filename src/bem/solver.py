@@ -1,3 +1,7 @@
+"""
+Solver module for Blade Element Momentum (BEM) method for wind turbine analysis.
+"""
+
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -123,4 +127,3 @@ def plot_cp_ct(V0_array, P_array, T_array, R, rho=1.225):
     plt.legend()
     plt.tight_layout()
     plt.show()
-
