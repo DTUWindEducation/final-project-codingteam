@@ -1,69 +1,50 @@
+"""Main script to run and visualize the full BEM workflow."""
+
 import sys
 from pathlib import Path
-
-# Add the src directory to Python path
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src" / "bem"))
-# from solver import BEM
-# from operation import blad_operation
-# from geometry import blad_geometry
-# from airfoil_data import read_polar
-# from solver import plot_cp_ct
-from bem.solver import BEMSolver, plot_cp_ct
-from bem.geometry import blad_geometry
-from bem.airfoil_data import read_polar
-from bem.operation import blad_operation
-from bem import BEMSolver, blad_geometry, read_polar
-
-
-import matplotlib.pyplot as plt
-from pathlib import Path
 import numpy as np
-# Load data
-geometry = blad_geometry(Path("./inputs/IEA-15-240-RWT/IEA-15-240-RWT_AeroDyn15_blade.dat"))
-polars = read_polar(Path("./inputs/IEA-15-240-RWT/Airfoils/polar").glob("*.dat"))
-operation = blad_operation(Path("./inputs/IEA-15-240-RWT/IEA_15MW_RWT_Onshore.opt"))
+import matplotlib.pyplot as plt
 
-# Initialize BEM model
-bem = BEMSolver(geometry, polars)
+# Add module path
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src" / "bem"))
+from bem.solver import BEMSolver, plot_cp_ct, plot_bem_vs_measured
+from bem.geometry import load_geometry, plot_geometry
+from bem.airfoil_data import read_polar, plot_airfoils, read_coords
+from bem.operation import blad_operation, plot_operational_subplots
 
-# Preallocate arrays
-P_out, T_out = [], []
-for idx, row in operation.iterrows():
-    V0 = row["V0"]
-    omega_rps = row["omega_rpm"] * 2 * np.pi / 60  # convert to rad/s
-    pitch = row["pitch_deg"]
-    T, M, P = bem.compute_performance(V0, omega_rps, pitch)
-    T_out.append(T / 1000)  # N -> kN
-    P_out.append(P / 1000)  # W -> kW
+def main():
+    base_dir = Path("./inputs/IEA-15-240-RWT")
+    polars_path = (base_dir / "Airfoils" / "polar").glob("*.dat")
+    coords_path = (base_dir / "Airfoils" / "coord").glob("*.txt")
+    geometry_path = base_dir / "IEA-15-240-RWT_AeroDyn15_blade.dat"
+    operation_path = base_dir / "IEA_15MW_RWT_Onshore.opt"
 
-# Plot results
-plt.figure()
-plt.plot(operation["V0"], P_out, label="Predicted Power [kW]")
-plt.plot(operation["V0"], T_out, label="Predicted Thrust [kN]")
-plt.xlabel("Wind Speed [m/s]")
-plt.ylabel("Performance")
-plt.title("BEM Power and Thrust Curves")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+    # Load data
+    polars = read_polar(polars_path)
+    geometry = load_geometry(geometry_path)
+    operation_df = blad_operation(operation_path)
+    coords = read_coords(coords_path)
 
-# Plot results with reference (measured) data
-plt.figure()
-plt.plot(operation["V0"], P_out, label="Predicted Power [kW]", markersize=2)
-plt.plot(operation["V0"], T_out, label="Predicted Thrust [kN]", markersize=2)
+    # Plot data
+    plot_geometry(geometry)
+    plot_operational_subplots(operation_df)
+    plot_airfoils(coords)
 
-# Plot reference (measured) values
-plt.plot(operation["V0"], operation["power_kw"], 'o--', label="Measured Power [kW]", markersize=4)
-plt.plot(operation["V0"], operation["thrust_kN"], 'o--', label="Measured Thrust [kN]", markersize=4)
+    # Run BEM model
+    bem = BEMSolver(geometry, polars)
+    power_output, thrust_output = [], []
 
-plt.xlabel("Wind Speed [m/s]")
-plt.ylabel("Performance")
-plt.title("BEM vs Measured Power and Thrust Curves")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+    for _, row in operation_df.iterrows():
+        v_0 = row["V0"]
+        omega_rps = row["omega_rpm"] * 2 * np.pi / 60
+        pitch_deg = row["pitch_deg"]
+        thrust, _, power = bem.compute_performance(v_0, omega_rps, pitch_deg)
+        thrust_output.append(thrust / 1000)
+        power_output.append(power / 1000)
 
-plot_cp_ct(operation["V0"].values, P_out, T_out, R=240/2)
+    # Plots
+    plot_bem_vs_measured(operation_df, power_output, thrust_output)
+    plot_cp_ct(operation_df["V0"].values, power_output, thrust_output, R=240 / 2)
 
+# if __name__ == "__main__":
+main()
