@@ -1,7 +1,7 @@
 """
 Solver module for Blade Element Momentum (BEM) method for wind turbine analysis.
 """
-
+# pylint: disable=C0103, R0914
 import numpy as np
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
@@ -39,8 +39,8 @@ class BEMSolver:
         cd_interp = interp1d(alpha, cd, bounds_error=False, fill_value="extrapolate")
         # return cl_interp(alpha_deg), cd_interp(alpha_deg)
         return cl_interp(alpha_deg).item(), cd_interp(alpha_deg).item()
- 
-    
+
+
     def compute_induction_factors(self, sigma, phi, Cn, Ct):
         '''Compute the induction factors a and a' based on the BEM theory.
         Args:
@@ -75,26 +75,23 @@ class BEMSolver:
         for i, r in enumerate(r_vals):
             if r == 0:
                 continue 
+
             local_chord = chord[i]
             local_twist = np.radians(twist[i])
             airfoil = af_id[i] - 1  # convert to 0-based
             sigma = self.B * local_chord / (2 * np.pi * r)
-
             # Init
             a_i, a_p_i = 0.0, 0.0
             for _ in range(max_iter):
                 phi = np.arctan2((1 - a_i) * V0, (1 + a_p_i) * omega * r)
                 alpha = np.degrees(phi - (np.radians(pitch_deg) + local_twist))
-
                 cl, cd = self.interpolate_polar(airfoil, alpha)
                 cn = cl * np.cos(phi) + cd * np.sin(phi)
                 ct = cl * np.sin(phi) - cd * np.cos(phi)
-
                 a_new, a_p_new = self.compute_induction_factors(sigma, phi, cn, ct)
                 if np.abs(a_new - a_i) < tol and np.abs(a_p_new - a_p_i) < tol:
                     break
                 a_i, a_p_i = a_new, a_p_new
-
             a[i] = a_i
             a_prime[i] = a_p_i
 
@@ -106,6 +103,36 @@ class BEMSolver:
 
         P = M * omega
         return T, M, P    
+
+
+def plot_bem_vs_measured(operation_df, power_output, thrust_output):
+    """
+    Create subplots comparing predicted vs measured power and thrust curves.
+
+    Args:
+        operation_df (pd.DataFrame): DataFrame with measured data.
+        power_output (list or array): Predicted power [kW].
+        thrust_output (list or array): Predicted thrust [kN].
+    """
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
+
+    axs[0].plot(operation_df["V0"], power_output, label="Predicted Power [kW]")
+    axs[0].plot(operation_df["V0"], operation_df["power_kw"], label="Measured Power [kW]")
+    axs[0].set_ylabel("Power [kW]")
+    axs[0].set_title("BEM vs Measured: Power")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    axs[1].plot(operation_df["V0"], thrust_output, label="Predicted Thrust [kN]")
+    axs[1].plot(operation_df["V0"], operation_df["thrust_kN"], label="Measured Thrust [kN]")
+    axs[1].set_xlabel("Wind Speed [m/s]")
+    axs[1].set_ylabel("Thrust [kN]")
+    axs[1].set_title("BEM vs Measured: Thrust")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    plt.tight_layout()
+    plt.show()
 
 def plot_cp_ct(V0_array, P_array, T_array, R, rho=1.225):
     """
