@@ -2,8 +2,8 @@
 # Our Great Package
 
 Team: Codingteam
-Rehab Salaheddin Abu Rashed   s191263
-Heba Haidar                   s184347
+- Rehab Salaheddin Abu Rashed   s191263
+- Heba Haidar                   s184347
 
 ## Overview
 
@@ -32,10 +32,16 @@ Clone the project to your local folder as followed:
  
 ### 2. create and activate a clean environment
 1. Open Anaconda Prompt
-2. Create a virtual environment using:
+2. Navigate to your project directory:
+   ```bash
+   cd <your_repo_directory>
+3. Create a virtual environment using:
+    ```bash
     <conda env create -f environment.yml>
-3. Activate the new environment using: <conda activate testpack>
-4. Type: cd <your_repo_directory> 
+4. Activate the new environment using: 
+    ```bash
+    <conda activate testpack>
+ 
 
 ### 3. Insatall the package
 
@@ -46,8 +52,9 @@ To install the package with followed dependencies:
 4. scipy
  
 you need to type the followed:
-1. Install the package in normal mode:
-    <pip install .>
+1. Install the package in editibal mode:
+    ```bash
+    <pip install -e .>
 
 ### 4. Run the main script
 By running the main.py located in examples/, this will execute the full Blade Element Momentum (BEM) modeling process for the IEA 15 MW wind turbine. It loads all input data, runs simulations across a range of wind speeds, and generates several plots that show:
@@ -79,13 +86,17 @@ This project will do the following:
 -------------------------------------------------------------------------
 ## Testing 
 
-### 1. Test Coverage:
-you need to run the test as followed in anaconda prompt:
-1. <pytest --cov=src tests/>
-( The test has achived the score of 97 % (16 tests have passed))
+### 1. Test Coverage
+
+To run the tests with coverage, use the following command in the Anaconda Prompt:
+pytest --cov=src tests/
+
+This project currently achieves 95% test coverage, with all 16 tests passing.
+
 ### 2. Pylint score:
-You also need to run the followed to check the codes in src file using pylint as followed:
-<pylint src/>
+You also need to run the followed to check the codes in src file using pylint as followed: <pylint src/>
+pylint src/
+
 (This has acheived: 9.53/10  )
 
 -------------------------------------------------------------------------
