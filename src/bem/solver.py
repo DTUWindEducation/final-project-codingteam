@@ -102,7 +102,92 @@ class BEMSolver:
         M = np.trapezoid(dM, r_vals)
 
         P = M * omega
-        return T, M, P    
+        return T, M, P
+
+
+    def compute_cp_ct_surface(self, pitch_range, lambda_range, V0, R, n_points=20):
+        """
+        Compute CP and CT over a grid of pitch angles and tip speed ratios (lambda).
+    
+        Args:
+        pitch_range (tuple): (min_pitch_deg, max_pitch_deg)
+        lambda_range (tuple): (min_lambda, max_lambda)
+        V0 (float): Wind speed [m/s]
+        R (float): Rotor radius [m]
+        n_points (int): Number of points in each dimension
+
+        Returns:
+        Tuple of (pitch_grid, lambda_grid, cp_grid, ct_grid)
+        """
+        pitch_vals = np.linspace(*pitch_range, n_points)
+        lambda_vals = np.linspace(*lambda_range, n_points)
+        pitch_grid, lambda_grid = np.meshgrid(pitch_vals, lambda_vals)
+
+        cp_grid = np.zeros_like(pitch_grid)
+        ct_grid = np.zeros_like(lambda_grid)
+        A = np.pi * R**2
+
+        for i in range(n_points):
+            for j in range(n_points):
+                pitch = pitch_grid[i, j]
+                lam = lambda_grid[i, j]
+                omega = lam * V0 / R
+                T, _, P = self.compute_performance(V0, omega, pitch)
+                cp_grid[i, j] = P / (0.5 * self.rho * A * V0**3)
+                ct_grid[i, j] = T  / (0.5 * self.rho * A * V0**2)
+        # Max CP
+        max_cp_idx = np.unravel_index(np.argmax(cp_grid), cp_grid.shape)
+        max_cp = cp_grid[max_cp_idx]
+        max_cp_pitch = pitch_grid[max_cp_idx]
+        max_cp_lambda = lambda_grid[max_cp_idx]
+
+        # Max CT
+        max_ct_idx = np.unravel_index(np.argmax(ct_grid), ct_grid.shape)
+        max_ct = ct_grid[max_ct_idx]
+        max_ct_pitch = pitch_grid[max_ct_idx]
+        max_ct_lambda = lambda_grid[max_ct_idx]
+        max_cp_point = (max_cp_pitch, max_cp_lambda)
+        max_ct_point = (max_ct_pitch, max_ct_lambda)
+
+        print(f"Max CP = {max_cp:.3f} at pitch = {max_cp_pitch:.2f} deg, TSR = {max_cp_lambda:.2f}")
+        print(f"Max CT = {max_ct:.3f} at pitch = {max_ct_pitch:.2f} deg, TSR = {max_ct_lambda:.2f}")
+
+        return pitch_grid, lambda_grid, cp_grid, ct_grid, max_cp_point, max_ct_point
+
+
+def plot_cp_ct_contours(pitch_grid, lambda_grid, cp_grid, ct_grid, 
+                        design_point=None, max_cp_point=None, max_ct_point=None):
+    fig, axs = plt.subplots(1, 2, figsize=(12, 5))
+
+    cp_levels = np.linspace(np.min(cp_grid), np.max(cp_grid), 10)
+    ct_levels = np.linspace(np.min(ct_grid), np.max(ct_grid), 10)
+
+    cp_contour = axs[0].contour(pitch_grid, lambda_grid, cp_grid, levels=cp_levels, cmap='viridis')
+    axs[0].clabel(cp_contour, inline=True, fontsize=8)
+    axs[0].set_title("Power Coefficient")
+    axs[0].set_xlabel("Blade Pitch Angle, [°]")
+    axs[0].set_ylabel("Tip Speed Ratio, [λ]")
+
+    ct_contour = axs[1].contour(pitch_grid, lambda_grid, ct_grid, levels=ct_levels, cmap='viridis')
+    axs[1].clabel(ct_contour, inline=True, fontsize=8)
+    axs[1].set_title("Thrust Coefficient")
+    axs[1].set_xlabel("Blade Pitch Angle, [°]")
+    axs[1].set_ylabel("Tip Speed Ratio, [λ]")
+
+    if design_point:
+        for ax in axs:
+            ax.plot(design_point[0], design_point[1], 'ks', label="Design Point")
+
+    if max_cp_point:
+        axs[0].plot(max_cp_point[0], max_cp_point[1], 'ro', label="Max $C_P$")
+        axs[0].legend()
+
+    if max_ct_point:
+        axs[1].plot(max_ct_point[0], max_ct_point[1], 'bo', label="Max $C_T$")
+        axs[1].legend()
+
+    plt.tight_layout()
+    plt.show()
 
 
 def plot_bem_vs_measured(operation_df, power_output, thrust_output):
