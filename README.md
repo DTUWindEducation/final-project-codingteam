@@ -86,16 +86,16 @@ This project will do the following:
 -------------------------------------------------------------------------
 ## Testing 
 
-### 1. Test Coverage:
-you need to run the test as followed in anaconda prompt:
-    ```bash
-    <pytest --cov=src tests/>
+### 1. Test Coverage
 
-( The test has achived the score of 95 % (16 tests have passed))
+To run the tests with coverage, use the following command in the Anaconda Prompt:
+pytest --cov=src tests/
+
+This project currently achieves 95% test coverage, with all 16 tests passing.
+
 ### 2. Pylint score:
-You also need to run the followed to check the codes in src file using pylint as followed:
-    ```bash
-    <pylint src/>
+You also need to run the followed to check the codes in src file using pylint as followed: <pylint src/>
+pylint src/
 
 (This has acheived: 9.53/10  )
 
