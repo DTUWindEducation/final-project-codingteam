@@ -53,6 +53,7 @@ To install the package with followed dependencies:
  
 you need to type the followed:
 1. Install the package in editibal mode:
+    ```bash
     <pip install -e .>
 
 ### 4. Run the main script
@@ -87,11 +88,15 @@ This project will do the following:
 
 ### 1. Test Coverage:
 you need to run the test as followed in anaconda prompt:
-1. <pytest --cov=src tests/>
+    ```bash
+    <pytest --cov=src tests/>
+
 ( The test has achived the score of 95 % (16 tests have passed))
 ### 2. Pylint score:
 You also need to run the followed to check the codes in src file using pylint as followed:
-<pylint src/>
+    ```bash
+    <pylint src/>
+
 (This has acheived: 9.53/10  )
 
 -------------------------------------------------------------------------
