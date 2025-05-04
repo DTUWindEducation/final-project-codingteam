@@ -58,4 +58,3 @@ def plot_operational_subplots(df_operation):
 
     plt.tight_layout()
     plt.show()
-    
