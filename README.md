@@ -17,6 +17,7 @@ Key features:
 - Computes power and thrust coefficients.
 - Plots the results.
 
+
 -------------------------------------------------------------------------
 ## Quick-start guide
 
@@ -33,7 +34,7 @@ Clone the project to your local folder as followed:
 1. Open Anaconda Prompt
 2. Create a virtual environment using:
     <conda env create -f environment.yml>
-3. activate the new environment using: <conda activate environment.yml>
+3. Activate the new environment using: <conda activate testpack>
 4. Type: cd <your_repo_directory> 
 
 ### 3. Insatall the package
@@ -69,7 +70,7 @@ This project will do the following:
 
 **Extra functions:**
 1. **plot_operational_subplots(...):** Visualizing operational strategy subplots.
-2. **plot_geometry(...):** Plot coord and twist.
+2. **plot_geometry(...):** Plot chord and twist.
 3. **compute_cp_ct_surface(...):** Compute max values of C_p and C_t.
 4. **plot_cp_ct_contours(...):** Plotting $C_P$ and $C_T$ curves as a function of lambda and pitch angle.
 5. **plot_cp_ct(...):** Plotting $C_P$ and $C_T$ curves as a function of wind speed 
@@ -113,7 +114,7 @@ P: Power [W]
 -------------------------------------------------------------------------
 
 ## Architecture
-
+The package architecture is showed in diagram.pmg
 ![alt text](diagram.png)
 
 
@@ -142,10 +143,11 @@ final-project/
 ├── LICENSE
 ├── pyproject.toml
 ├── .gitignore
-└── Collaboration.md
+├── environment.yml
+└── diagram.png
 
 -------------------------------------------------------------------------
 ## Peer review
 
-[ADD TEXT HERE!]
+Our team used a peer review workflow throughout development. All major features were developed in separate branches and merged into main via pull requests (PRs). Each PR was reviewed by at least one other team member before merging to ensure code quality and consistency.
 
