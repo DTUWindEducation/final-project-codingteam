@@ -36,8 +36,10 @@ Clone the project to your local folder as followed:
    ```bash
    cd <your_repo_directory>
 3. Create a virtual environment using:
+    ```bash
     <conda env create -f environment.yml>
 4. Activate the new environment using: 
+    ```bash
     <conda activate testpack>
  
 
